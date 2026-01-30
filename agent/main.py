@@ -150,21 +150,9 @@ async def entrypoint(ctx: JobContext):
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant joined: {participant.identity}")
 
-    from openai.types.beta.realtime.session import InputAudioTranscription, TurnDetection
     model = openai.realtime.RealtimeModel(
         voice="shimmer",
         modalities=["audio", "text"],
-        input_audio_transcription=InputAudioTranscription(
-            model="whisper-1",
-            language="en",
-        ),
-        turn_detection=TurnDetection(
-            type="server_vad",
-            threshold=0.5,
-            prefix_padding_ms=300,
-            silence_duration_ms=500,
-            create_response=True,
-        ),
     )
 
     session = AgentSession(llm=model)
