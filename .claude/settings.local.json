@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync:*)",
+      "Bash(npm install)",
+      "Bash(uv run python:*)"
+    ]
+  }
+}
