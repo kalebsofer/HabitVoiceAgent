@@ -1,5 +1,9 @@
 import logging
+from datetime import datetime
+from datetime import datetime as _dt
+from datetime import timezone as _tz
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -27,6 +31,29 @@ def get_calendar_service():
     return build("calendar", "v3", credentials=creds)
 
 
+def list_calendars() -> list[dict]:
+    """Return all calendars the user has visible (selected) in Google Calendar.
+
+    Each entry: { id, name, color, access_role, selected }
+    access_role is one of: 'owner', 'writer', 'reader', 'freeBusyReader'
+    """
+    service = get_calendar_service()
+    result = service.calendarList().list().execute()
+    calendars = []
+    for entry in result.get("items", []):
+        # Only include calendars the user has toggled visible
+        if not entry.get("selected", False):
+            continue
+        calendars.append({
+            "id": entry["id"],
+            "name": entry.get("summaryOverride") or entry.get("summary", "(untitled)"),
+            "color": entry.get("backgroundColor", "#4285f4"),
+            "access_role": entry.get("accessRole", "reader"),
+            "selected": True,
+        })
+    return calendars
+
+
 def create_event(
     summary: str,
     start_iso: str,
@@ -34,6 +61,7 @@ def create_event(
     description: str = "",
     recurrence: list[str] | None = None,
     timezone: str = "America/New_York",
+    calendar_id: str = "primary",
 ) -> dict:
     service = get_calendar_service()
     event_body: dict = {
@@ -44,25 +72,95 @@ def create_event(
     }
     if recurrence:
         event_body["recurrence"] = recurrence
-    event = service.events().insert(calendarId="primary", body=event_body).execute()
+    event = service.events().insert(calendarId=calendar_id, body=event_body).execute()
     logger.info(f"Created event: {event.get('htmlLink')}")
     return event
 
 
-def list_upcoming_events(max_results: int = 10) -> list[dict]:
-    from datetime import datetime, timezone
+def list_upcoming_events(
+    max_results: int = 10,
+    calendar_ids: list[str] | None = None,
+) -> list[dict]:
+    service = get_calendar_service()
+    now = _dt.now(_tz.utc).isoformat()
+
+    if not calendar_ids:
+        calendar_ids = ["primary"]
+
+    all_events: list[dict] = []
+    for cal_id in calendar_ids:
+        try:
+            result = (
+                service.events()
+                .list(
+                    calendarId=cal_id,
+                    timeMin=now,
+                    maxResults=max_results,
+                    singleEvents=True,
+                    orderBy="startTime",
+                )
+                .execute()
+            )
+            all_events.extend(result.get("items", []))
+        except Exception as e:
+            logger.warning(f"Failed to list events from calendar '{cal_id}': {e}")
+
+    # Sort merged results by start time
+    all_events.sort(key=lambda ev: ev["start"].get("dateTime", ev["start"].get("date", "")))
+    return all_events[:max_results]
+
+
+def list_month_events(
+    year: int,
+    month: int,
+    timezone: str = "UTC",
+    max_results: int = 250,
+    calendars: list[dict] | None = None,
+) -> list[dict]:
+    """Return all events in a given month from all provided calendars.
+
+    If calendars is provided, each entry should have { id, name, color }.
+    Events are returned with extra fields: _calendar_id, _calendar_name, _calendar_color.
+    """
+    tz = ZoneInfo(timezone)
+    time_min = datetime(year, month, 1, tzinfo=tz)
+
+    # First day of next month
+    if month == 12:
+        time_max = datetime(year + 1, 1, 1, tzinfo=tz)
+    else:
+        time_max = datetime(year, month + 1, 1, tzinfo=tz)
 
     service = get_calendar_service()
-    now = datetime.now(timezone.utc).isoformat()
-    result = (
-        service.events()
-        .list(
-            calendarId="primary",
-            timeMin=now,
-            maxResults=max_results,
-            singleEvents=True,
-            orderBy="startTime",
-        )
-        .execute()
-    )
-    return result.get("items", [])
+
+    # Default to primary if no calendars specified
+    if not calendars:
+        calendars = [{"id": "primary", "name": "Primary", "color": "#4285f4"}]
+
+    all_events: list[dict] = []
+    for cal in calendars:
+        cal_id = cal["id"]
+        try:
+            result = (
+                service.events()
+                .list(
+                    calendarId=cal_id,
+                    timeMin=time_min.isoformat(),
+                    timeMax=time_max.isoformat(),
+                    maxResults=max_results,
+                    singleEvents=True,
+                    orderBy="startTime",
+                )
+                .execute()
+            )
+            for ev in result.get("items", []):
+                ev["_calendar_id"] = cal_id
+                ev["_calendar_name"] = cal["name"]
+                ev["_calendar_color"] = cal["color"]
+                all_events.append(ev)
+        except Exception as e:
+            logger.warning(f"Failed to list month events from calendar '{cal_id}': {e}")
+
+    # Sort merged results by start time
+    all_events.sort(key=lambda ev: ev["start"].get("dateTime", ev["start"].get("date", "")))
+    return all_events

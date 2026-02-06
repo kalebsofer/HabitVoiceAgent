@@ -1,0 +1,218 @@
+{
+  "timezone": "Europe/London",
+  "month": "2026-02",
+  "generated_at": "2026-02-06T16:57:41.987375+00:00",
+  "status": "draft",
+  "items": [
+    {
+      "id": "7drspbv4d7dce7fn8l41p4lsol",
+      "type": "existing",
+      "summary": "tax - claim repayment",
+      "start": "2026-02-02T20:00:00Z",
+      "end": "2026-02-02T21:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "4mjlt52t41uorlfbegremofv5u",
+      "type": "existing",
+      "summary": "emails - iOS/Android",
+      "start": "2026-02-03T09:00:00Z",
+      "end": "2026-02-03T10:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "5slae671an5pfb1bhj472k9pot",
+      "type": "existing",
+      "summary": "swim",
+      "start": "2026-02-03T14:30:00Z",
+      "end": "2026-02-03T15:30:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "6e8ol9ng9jekhp222g2630q88n",
+      "type": "existing",
+      "summary": "Swim",
+      "start": "2026-02-04T12:30:00Z",
+      "end": "2026-02-04T13:30:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "74166deqdfpj2a8nkos1tnm8uo",
+      "type": "existing",
+      "summary": "Stewart Lee @ Ally Pally ",
+      "start": "2026-02-05T19:30:00Z",
+      "end": "2026-02-05T21:30:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "71hm2p1jckrj8bb370rjeb9kcdi3cbb2cpj38b9nc8q3iopjc8oj8c1g6s",
+      "type": "existing",
+      "summary": "Busy",
+      "start": "2026-02-06T10:00:00Z",
+      "end": "2026-02-06T12:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "cpij0p9j6or34b9n60s64b9k6gr64bb26sp3cb9g6crjadpg69j3ee1lco",
+      "type": "existing",
+      "summary": "Moby tickets @5",
+      "start": "2026-02-06T16:45:00Z",
+      "end": "2026-02-06T17:45:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "6cq3ic1oc9h6ab9kcgomab9kclgm6b9p68qm8b9mc4sm4dr168p36opjck",
+      "type": "existing",
+      "summary": "Lorna bday",
+      "start": "2026-02-06T19:00:00Z",
+      "end": "2026-02-06T22:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "6srj0o9nccq38bb56sojib9kc9hj4bb1c8qm4bb470r3eor2chim2dj470",
+      "type": "existing",
+      "summary": "Becky 30th",
+      "start": "2026-02-07T19:00:00Z",
+      "end": "2026-02-07T23:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "70qjeob66pi66b9h64om8b9kc4r3abb2c4o6ab9k64pm8dpickqjed1pck_20260208T120000Z",
+      "type": "existing",
+      "summary": "Brunch",
+      "start": "2026-02-08T12:00:00Z",
+      "end": "2026-02-08T15:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "0728hdlvj0nqpahm1lvv0f0mob",
+      "type": "existing",
+      "summary": "Ultrasound scan @ 9:40",
+      "start": "2026-02-09T09:30:00Z",
+      "end": "2026-02-09T10:30:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "68q38chl70ojcb9ockq64b9kccs38b9o6or3abb36csj0db3cpim6p9h6s",
+      "type": "existing",
+      "summary": "Physio Royal Free",
+      "start": "2026-02-11T14:30:00Z",
+      "end": "2026-02-11T15:30:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "c5gjidb46op32bb168o36b9k6os3cbb2c9ij0b9ickp3idpn6lim6d9ocg",
+      "type": "existing",
+      "summary": "Dinner w Gng",
+      "start": "2026-02-12T19:00:00Z",
+      "end": "2026-02-12T23:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "6os38or171i3ab9l74r6cb9k6limabb26sojgbb56gq3ccr66gr6achk6o",
+      "type": "existing",
+      "summary": "ENT follow-up",
+      "start": "2026-02-13T09:30:00Z",
+      "end": "2026-02-13T10:30:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "70qjeob66pi66b9h64om8b9kc4r3abb2c4o6ab9k64pm8dpickqjed1pck_20260215T120000Z",
+      "type": "existing",
+      "summary": "Brunch",
+      "start": "2026-02-15T12:00:00Z",
+      "end": "2026-02-15T15:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "64p3edj571hm4b9g6cqj2b9kcos64b9o74q34b9l74ojeor4ccrjgob1co",
+      "type": "existing",
+      "summary": "(surprise) Ice bday - Rita's",
+      "start": "2026-02-21T17:00:00Z",
+      "end": "2026-02-21T22:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "70qjeob66pi66b9h64om8b9kc4r3abb2c4o6ab9k64pm8dpickqjed1pck_20260222T120000Z",
+      "type": "existing",
+      "summary": "Brunch",
+      "start": "2026-02-22T12:00:00Z",
+      "end": "2026-02-22T15:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "74s3edj3chijebb270r6cb9k71im2bb269ijebb66hh34cr36cpjgp3464",
+      "type": "existing",
+      "summary": "Ice bday lumch",
+      "start": "2026-02-22T13:00:00Z",
+      "end": "2026-02-22T16:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "70qjeob66pi66b9h64om8b9kc4r3abb2c4o6ab9k64pm8dpickqjed1pck_20260201T120000Z",
+      "type": "existing",
+      "summary": "Brunch @ Plimsoll",
+      "start": "2026-02-28T12:00:00Z",
+      "end": "2026-02-28T15:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "6ksm8c9pcgoj2b9hc9j38b9k71im6bb16gr36b9n6lj3gc3574o36cj26c",
+      "type": "existing",
+      "summary": "Lunch w/ M fam",
+      "start": "2026-02-28T13:00:00Z",
+      "end": "2026-02-28T15:00:00Z",
+      "recurrence": null,
+      "habit_name": null
+    },
+    {
+      "id": "draft_001",
+      "type": "draft",
+      "summary": "Morning Mindfulness",
+      "start": "2026-02-07T07:00:00+00:00",
+      "end": "2026-02-07T07:10:00+00:00",
+      "recurrence": "daily",
+      "habit_name": "Morning Mindfulness",
+      "description": "Goal: improve mindfulness\nCue: after shower, before coffee\n2-min version: 2-minute mindful breathing exercise"
+    },
+    {
+      "id": "draft_002",
+      "type": "draft",
+      "summary": "Morning Run",
+      "start": "2026-02-07T08:00:00+00:00",
+      "end": "2026-02-07T08:30:00+00:00",
+      "recurrence": "daily",
+      "habit_name": "Morning Run",
+      "description": "Goal: Improve cardio health\nCue: after waking up\n2-min version: put on running shoes and step outside"
+    },
+    {
+      "id": "draft_003",
+      "type": "draft",
+      "summary": "Morning Meditation",
+      "start": "2026-02-07T07:30:00+00:00",
+      "end": "2026-02-07T07:32:00+00:00",
+      "recurrence": "daily",
+      "habit_name": "Morning Meditation",
+      "description": "Goal: improve mindfulness\nCue: after getting changed and before coffee\n2-min version: sit quietly and focus on your breath for 2 minutes"
+    }
+  ]
+}

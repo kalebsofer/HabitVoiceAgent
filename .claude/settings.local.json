@@ -3,7 +3,13 @@
     "allow": [
       "Bash(uv sync:*)",
       "Bash(npm install)",
-      "Bash(uv run python:*)"
+      "Bash(uv run python:*)",
+      "Bash(dir:*)",
+      "Bash(npx next build)",
+      "Bash(uv add:*)",
+      "Bash(test:*)",
+      "Bash(python -c:*)",
+      "Bash(npx:*)"
     ]
   }
 }
