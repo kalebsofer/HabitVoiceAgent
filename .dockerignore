@@ -1,0 +1,33 @@
+.git
+.github
+.claude
+
+# Python
+__pycache__
+*.pyc
+.venv
+agent/.venv
+
+# Node
+node_modules
+frontend/node_modules
+frontend/.next
+
+# Environment and secrets
+.env
+.env.*
+!.env.production.example
+agent/.env
+agent/credentials.json
+agent/token.json
+frontend/.env.local
+
+# State files (live in Docker volumes)
+agent/memory.json
+agent/habit_plan.json
+agent/draft_schedule.json
+
+# IDE
+.vscode
+.idea
+*.swp

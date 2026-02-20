@@ -214,3 +214,4 @@ agent/token.json
 node_modules/
 .next/
 .env.local
+.env.production

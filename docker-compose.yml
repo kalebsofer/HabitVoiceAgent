@@ -1,0 +1,44 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_LIVEKIT_URL=${LIVEKIT_URL}
+    restart: unless-stopped
+    environment:
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.habitvoice.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.habitvoice.entrypoints=websecure"
+      - "traefik.http.routers.habitvoice.tls.certresolver=myresolver"
+      - "traefik.http.services.habitvoice.loadbalancer.server.port=3000"
+
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - agent_data:/app/data
+      - agent_secrets:/app/secrets
+    networks:
+      - app-network
+
+volumes:
+  agent_data:
+  agent_secrets:
+
+networks:
+  app-network:
+    external: true
