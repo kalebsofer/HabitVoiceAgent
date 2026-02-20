@@ -11,6 +11,6 @@ RUN uv sync --frozen --no-dev
 # Copy application source
 COPY main.py calendar_client.py ./
 COPY docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
