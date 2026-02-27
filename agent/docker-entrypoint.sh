@@ -1,21 +1,10 @@
 #!/bin/sh
 set -e
 
-# Symlink persistent state files from the data volume into /app/
-# where Path(__file__).parent resolves, so app code works unchanged.
-# memory.json is a dict {}, habit_plan.json and draft_schedule.json are lists []
-for f in memory.json; do
-    if [ ! -f "/app/data/$f" ]; then
-        echo "{}" > "/app/data/$f"
-    fi
-    ln -sf "/app/data/$f" "/app/$f"
-done
-for f in habit_plan.json draft_schedule.json; do
-    if [ ! -f "/app/data/$f" ]; then
-        echo "[]" > "/app/data/$f"
-    fi
-    ln -sf "/app/data/$f" "/app/$f"
-done
+# Ensure the persistent data volume is mounted and writable.
+# Per-user subdirectories (e.g. /app/data/google-12345/) are created
+# on demand by the agent when a user connects.
+mkdir -p /app/data
 
 # Symlink Google OAuth credentials from the secrets volume
 for f in credentials.json token.json; do

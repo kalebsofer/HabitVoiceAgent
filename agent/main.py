@@ -19,9 +19,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("voice-agent")
 logger.setLevel(logging.DEBUG)
 
-MEMORY_FILE = Path(__file__).parent / "memory.json"
-HABIT_PLAN_FILE = Path(__file__).parent / "habit_plan.json"
-DRAFT_SCHEDULE_FILE = Path(__file__).parent / "draft_schedule.json"
+DATA_BASE_DIR = Path(__file__).parent / "data"
 
 RECURRENCE_MAP = {
     "daily": ["RRULE:FREQ=DAILY"],
@@ -110,14 +108,15 @@ STAGE_INSTRUCTIONS = {
 }
 
 
-def load_memory() -> dict[str, str]:
-    if MEMORY_FILE.exists():
-        return json.loads(MEMORY_FILE.read_text())
+def load_memory(memory_file: Path) -> dict[str, str]:
+    if memory_file.exists():
+        return json.loads(memory_file.read_text())
     return {}
 
 
-def save_memory(memory: dict[str, str]) -> None:
-    MEMORY_FILE.write_text(json.dumps(memory, indent=2))
+def save_memory(memory: dict[str, str], memory_file: Path) -> None:
+    memory_file.parent.mkdir(parents=True, exist_ok=True)
+    memory_file.write_text(json.dumps(memory, indent=2))
 
 
 def get_local_timezone() -> str:
@@ -201,7 +200,7 @@ async def _push_status(agent: "VoiceAgent", message: str) -> None:
 
 async def _push_draft_to_frontend(agent: "VoiceAgent", draft: dict) -> None:
     """Persist draft to disk and publish to frontend via data channel."""
-    DRAFT_SCHEDULE_FILE.write_text(json.dumps(draft, indent=2))
+    agent._draft_schedule_file.write_text(json.dumps(draft, indent=2))
 
     payload = json.dumps(draft).encode("utf-8")
     room = agent._room
@@ -225,9 +224,18 @@ class VoiceAgent(Agent):
     _google_tokens: dict | None = None    # per-user OAuth tokens from participant metadata
     _calendar_service: object | None = None  # cached per-user calendar service
 
-    def __init__(self, user_tz: str = "", google_tokens: dict | None = None):
+    def __init__(self, user_tz: str = "", google_tokens: dict | None = None, user_id: str = ""):
         self.user_tz = user_tz or get_local_timezone()
         self._google_tokens = google_tokens
+
+        # Per-user data directory
+        self._user_id = user_id or "default"
+        self._user_data_dir = DATA_BASE_DIR / self._user_id
+        self._user_data_dir.mkdir(parents=True, exist_ok=True)
+        self._memory_file = self._user_data_dir / "memory.json"
+        self._habit_plan_file = self._user_data_dir / "habit_plan.json"
+        self._draft_schedule_file = self._user_data_dir / "draft_schedule.json"
+        logger.info(f"[STORAGE] User data dir: {self._user_data_dir}")
         now = datetime.now(ZoneInfo(self.user_tz))
         time_context = (
             f"## Current Context\n"
@@ -303,22 +311,22 @@ class VoiceAgent(Agent):
 
     @llm.function_tool(description="Save a note to memory with a key and value. Use this to remember important things about the user.")
     async def save_note(self, key: str, value: str) -> str:
-        memory = load_memory()
+        memory = load_memory(self._memory_file)
         memory[key] = value
-        save_memory(memory)
+        save_memory(memory, self._memory_file)
         logger.info(f"Saved memory: {key} = {value}")
         return f"Saved '{key}' to memory."
 
     @llm.function_tool(description="Recall a note from memory by key. Returns the value if found.")
     async def recall_note(self, key: str) -> str:
-        memory = load_memory()
+        memory = load_memory(self._memory_file)
         if key in memory:
             return f"{key}: {memory[key]}"
         return f"No memory found for '{key}'."
 
     @llm.function_tool(description="List all saved memory keys and values.")
     async def list_memories(self) -> str:
-        memory = load_memory()
+        memory = load_memory(self._memory_file)
         if not memory:
             return "No memories saved yet."
         return "\n".join(f"{k}: {v}" for k, v in memory.items())
@@ -413,9 +421,9 @@ class VoiceAgent(Agent):
     ) -> str:
         # Check for existing saved habits
         existing_habits = []
-        if HABIT_PLAN_FILE.exists():
+        if self._habit_plan_file.exists():
             try:
-                data = json.loads(HABIT_PLAN_FILE.read_text())
+                data = json.loads(self._habit_plan_file.read_text())
                 existing_habits = data if isinstance(data, list) else []
             except Exception:
                 existing_habits = []
@@ -535,8 +543,8 @@ class VoiceAgent(Agent):
                 logger.warning(f"[SAVE HABIT] {time_warn}")
 
             habits = []
-            if HABIT_PLAN_FILE.exists():
-                data = json.loads(HABIT_PLAN_FILE.read_text())
+            if self._habit_plan_file.exists():
+                data = json.loads(self._habit_plan_file.read_text())
                 habits = data if isinstance(data, list) else []
 
             # Check for duplicate or very similar habit names
@@ -559,7 +567,7 @@ class VoiceAgent(Agent):
                 "two_minute_version": two_minute_version,
             }
             habits.append(habit)
-            HABIT_PLAN_FILE.write_text(json.dumps(habits, indent=2))
+            self._habit_plan_file.write_text(json.dumps(habits, indent=2))
             self._stage = STAGE_SCHEDULING
             logger.info(f"Saved habit plan: {name} — [STAGE] → {self._stage}")
             habit_count = len(habits)
@@ -592,9 +600,9 @@ class VoiceAgent(Agent):
     @llm.function_tool(description="List all habits currently in the habit plan.")
     async def list_habit_plan(self) -> str:
         try:
-            if not HABIT_PLAN_FILE.exists():
+            if not self._habit_plan_file.exists():
                 return "No habits in the plan yet."
-            data = json.loads(HABIT_PLAN_FILE.read_text())
+            data = json.loads(self._habit_plan_file.read_text())
             habits = data if isinstance(data, list) else []
             if not habits:
                 return "No habits in the plan yet."
@@ -743,9 +751,9 @@ class VoiceAgent(Agent):
     async def generate_draft_schedule(self) -> str:
         try:
             # Load habit plan
-            if not HABIT_PLAN_FILE.exists():
+            if not self._habit_plan_file.exists():
                 return "No habit plan found. Please create habits first."
-            data = json.loads(HABIT_PLAN_FILE.read_text())
+            data = json.loads(self._habit_plan_file.read_text())
             habits = data if isinstance(data, list) else []
             if not habits:
                 return "Habit plan is empty. Please add some habits first."
@@ -1006,8 +1014,8 @@ class VoiceAgent(Agent):
 
             # Load the habit from the plan to get metadata
             habits = []
-            if HABIT_PLAN_FILE.exists():
-                data = json.loads(HABIT_PLAN_FILE.read_text())
+            if self._habit_plan_file.exists():
+                data = json.loads(self._habit_plan_file.read_text())
                 habits = data if isinstance(data, list) else []
             habit = next((h for h in habits if h["name"].lower() == habit_name.lower()), None)
 
@@ -1258,10 +1266,14 @@ async def entrypoint(ctx: JobContext):
         except (json.JSONDecodeError, TypeError):
             logger.warning("[STARTUP] Could not parse participant metadata as Google tokens")
 
+    # Use participant identity as per-user data directory key
+    user_id = participant.identity or "default"
+    logger.info(f"[STARTUP] User ID for storage: {user_id}")
+
     # Load existing memories so the agent can reference them
-    memory = load_memory()
-    agent = VoiceAgent(google_tokens=google_tokens)
+    agent = VoiceAgent(google_tokens=google_tokens, user_id=user_id)
     agent._room = ctx.room
+    memory = load_memory(agent._memory_file)
     if memory:
         memory_summary = ", ".join(f"{k}: {v}" for k, v in memory.items())
         agent._extra_context = (

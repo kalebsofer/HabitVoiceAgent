@@ -52,12 +52,26 @@ export async function GET(request: NextRequest) {
 
   const tokens = await tokenRes.json();
 
+  // Extract stable Google user ID from id_token (JWT payload)
+  let googleSub = "";
+  if (tokens.id_token) {
+    try {
+      const payload = JSON.parse(
+        Buffer.from(tokens.id_token.split(".")[1], "base64url").toString()
+      );
+      googleSub = payload.sub || "";
+    } catch {
+      console.error("Failed to decode id_token");
+    }
+  }
+
   // Encrypt tokens and store in httpOnly cookie
   const tokenPayload = JSON.stringify({
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
     token_type: tokens.token_type,
     expiry_date: Date.now() + tokens.expires_in * 1000,
+    google_sub: googleSub,
   });
 
   const encrypted = encrypt(tokenPayload);

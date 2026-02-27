@@ -33,8 +33,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Use stable Google user ID as participant identity for per-user data storage
+  const parsed = JSON.parse(googleTokensJson);
+  const googleSub = parsed.google_sub || "";
+  const participantName = googleSub
+    ? `google-${googleSub}`
+    : `user-${Math.random().toString(36).slice(2, 7)}`;
+
   const roomName = "voice-agent-room";
-  const participantName = `user-${Math.random().toString(36).slice(2, 7)}`;
 
   const at = new AccessToken(apiKey, apiSecret, {
     identity: participantName,
