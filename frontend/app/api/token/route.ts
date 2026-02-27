@@ -1,7 +1,8 @@
 import { AccessToken } from "livekit-server-sdk";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { decrypt } from "../../lib/crypto";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const apiKey = process.env.LIVEKIT_API_KEY;
   const apiSecret = process.env.LIVEKIT_API_SECRET;
   const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
@@ -10,6 +11,25 @@ export async function GET() {
     return NextResponse.json(
       { error: "Server misconfigured" },
       { status: 500 }
+    );
+  }
+
+  // Read and decrypt Google tokens from cookie
+  const cookie = request.cookies.get("google_tokens")?.value;
+  if (!cookie) {
+    return NextResponse.json(
+      { error: "Not authenticated" },
+      { status: 401 }
+    );
+  }
+
+  let googleTokensJson: string;
+  try {
+    googleTokensJson = decrypt(cookie);
+  } catch {
+    return NextResponse.json(
+      { error: "Session expired" },
+      { status: 401 }
     );
   }
 
@@ -26,6 +46,9 @@ export async function GET() {
     canPublish: true,
     canSubscribe: true,
   });
+
+  // Embed Google tokens in participant metadata for the agent to read
+  at.metadata = googleTokensJson;
 
   const token = await at.toJwt();
 

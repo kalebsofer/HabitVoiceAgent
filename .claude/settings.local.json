@@ -9,7 +9,9 @@
       "Bash(uv add:*)",
       "Bash(test:*)",
       "Bash(python -c:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(openssl rand:*)",
+      "Bash(ls:*)"
     ]
   }
 }

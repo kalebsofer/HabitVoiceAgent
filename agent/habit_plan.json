@@ -1,29 +1,11 @@
 [
   {
-    "name": "Morning Mindfulness",
-    "goal": "improve mindfulness",
-    "cadence": "daily",
-    "preferred_time": "morning",
-    "duration_minutes": 10,
-    "cue": "after shower, before coffee",
-    "two_minute_version": "2-minute mindful breathing exercise"
-  },
-  {
-    "name": "Morning Run",
-    "goal": "Improve cardio health",
+    "name": "morning run",
+    "goal": "improve fitness",
     "cadence": "daily",
     "preferred_time": "08:00",
-    "duration_minutes": 30,
-    "cue": "after waking up",
-    "two_minute_version": "put on running shoes and step outside"
-  },
-  {
-    "name": "Morning Meditation",
-    "goal": "improve mindfulness",
-    "cadence": "daily",
-    "preferred_time": "morning",
-    "duration_minutes": 2,
-    "cue": "after getting changed and before coffee",
-    "two_minute_version": "sit quietly and focus on your breath for 2 minutes"
+    "duration_minutes": 20,
+    "cue": "getting changed into running clothes",
+    "two_minute_version": "putting on running shoes and stepping outside"
   }
 ]

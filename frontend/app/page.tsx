@@ -17,13 +17,26 @@ import DraftCalendar from "./components/DraftCalendar";
 import type { DraftSchedule } from "./components/DraftCalendar";
 
 export default function Home() {
+  // null = loading, false = unauthenticated, true = authenticated
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [connectionDetails, setConnectionDetails] = useState<{
     token: string;
     url: string;
   } | null>(null);
 
+  useEffect(() => {
+    fetch("/api/auth/status")
+      .then((res) => res.json())
+      .then((data) => setAuthenticated(data.authenticated))
+      .catch(() => setAuthenticated(false));
+  }, []);
+
   const connect = useCallback(async () => {
     const res = await fetch("/api/token");
+    if (res.status === 401) {
+      setAuthenticated(false);
+      return;
+    }
     const details = await res.json();
     setConnectionDetails(details);
   }, []);
@@ -43,7 +56,28 @@ export default function Home() {
         padding: "1rem",
       }}
     >
-      {!connectionDetails ? (
+      {authenticated === null ? (
+        <p style={{ opacity: 0.6 }}>Loading...</p>
+      ) : !authenticated ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}>
+          <p style={{ fontSize: "1.1rem", opacity: 0.8 }}>Sign in to connect your Google Calendar</p>
+          <a
+            href="/api/auth/login"
+            style={{
+              padding: "0.75rem 2rem",
+              fontSize: "1.1rem",
+              borderRadius: "8px",
+              border: "1px solid #333",
+              background: "#1a1a1a",
+              color: "#fafafa",
+              cursor: "pointer",
+              textDecoration: "none",
+            }}
+          >
+            Sign in with Google
+          </a>
+        </div>
+      ) : !connectionDetails ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}>
           <MicVolumeMeter />
           <button
@@ -58,7 +92,7 @@ export default function Home() {
               cursor: "pointer",
             }}
           >
-            Start Conversation
+            What's your goal?
           </button>
         </div>
       ) : (

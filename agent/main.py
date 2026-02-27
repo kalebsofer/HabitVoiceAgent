@@ -67,9 +67,12 @@ STAGE_INSTRUCTIONS = {
         "(tie it to identity: 'I want to become the type of person who...')\n"
         "- Ask about their current routine, preferred times, and constraints\n"
         "- Learn what activities they enjoy or dislike\n"
-        "- Suggest small, concrete habits using Atomic Habits principles "
+        "- Suggest 1-2 small, concrete RECURRING habits using Atomic Habits principles "
         "(two-minute rule, habit stacking, reduce friction)\n"
         "- Ask 1-2 questions at a time — don't dump everything at once\n"
+        "- Help them pick their single most impactful habit to start with — "
+        "they can always add more once this one sticks\n"
+        "- Every habit must be recurring (daily, weekdays, weekly, etc.) — not a one-off task\n"
         "- When a concrete habit emerges, call assess_user_input again with the new details"
     ),
     STAGE_DETAILING: (
@@ -219,9 +222,12 @@ class VoiceAgent(Agent):
     _stage: str = STAGE_GREETING
     _calendars: list[dict] | None = None  # cached calendar list
     _target_calendar: str = "primary"     # calendar ID to create events on
+    _google_tokens: dict | None = None    # per-user OAuth tokens from participant metadata
+    _calendar_service: object | None = None  # cached per-user calendar service
 
-    def __init__(self, user_tz: str = ""):
+    def __init__(self, user_tz: str = "", google_tokens: dict | None = None):
         self.user_tz = user_tz or get_local_timezone()
+        self._google_tokens = google_tokens
         now = datetime.now(ZoneInfo(self.user_tz))
         time_context = (
             f"## Current Context\n"
@@ -240,9 +246,19 @@ class VoiceAgent(Agent):
 
                 + time_context +
 
+                "## Core Philosophy: Start Small\n"
+                "The #1 principle from Atomic Habits is: start with LESS than you think you need. "
+                "Guide users toward 1-2 recurring habits to begin with. Stacking 5 habits at once "
+                "is a recipe for failure. If a user mentions many goals, help them prioritize and "
+                "pick the ONE or TWO most impactful habits to start with. They can always add more "
+                "later once these are established.\n\n"
+                "Every habit MUST have a recurring cadence (daily, weekdays, weekly, 3x_per_week, "
+                "or monthly). One-off events are not habits. If the user describes something that "
+                "sounds like a one-time task, reframe it as a repeating practice.\n\n"
+
                 "## Conversation Pipeline\n"
                 "You guide users through these stages:\n"
-                "1. DISCOVERY — understand vague goals, suggest concrete habits\n"
+                "1. DISCOVERY — understand vague goals, suggest 1-2 concrete habits\n"
                 "2. DETAILING — fill in specifics (cadence, time, duration, cue)\n"
                 "3. CONFIRMATION — confirm details, save each habit via save_habit_plan\n"
                 "4. SCHEDULING — check calendar, generate conflict-free draft\n"
@@ -274,6 +290,15 @@ class VoiceAgent(Agent):
             ),
         )
 
+    def _get_service(self):
+        """Get a Google Calendar service, using per-user tokens if available."""
+        if self._calendar_service is not None:
+            return self._calendar_service
+        if self._google_tokens:
+            self._calendar_service = calendar_client.get_calendar_service_from_tokens(self._google_tokens)
+            return self._calendar_service
+        return None  # fall back to legacy file-based auth in calendar_client functions
+
     # --- Memory tools ---
 
     @llm.function_tool(description="Save a note to memory with a key and value. Use this to remember important things about the user.")
@@ -303,7 +328,7 @@ class VoiceAgent(Agent):
     async def _get_calendars(self) -> list[dict]:
         """Get visible calendars, using session cache to avoid repeated API calls."""
         if self._calendars is None:
-            self._calendars = calendar_client.list_calendars()
+            self._calendars = calendar_client.list_calendars(service=self._get_service())
             logger.info(f"[CALENDARS] Fetched {len(self._calendars)} visible calendar(s)")
         return self._calendars
 
@@ -512,6 +537,16 @@ class VoiceAgent(Agent):
             if HABIT_PLAN_FILE.exists():
                 habits = json.loads(HABIT_PLAN_FILE.read_text())
 
+            # Check for duplicate or very similar habit names
+            name_lower = name.strip().lower()
+            for existing in habits:
+                if existing["name"].strip().lower() == name_lower:
+                    return (
+                        f"A habit called '{existing['name']}' already exists in the plan "
+                        f"({existing['cadence']} at {existing['preferred_time']}). "
+                        f"Ask the user if they want to update the existing one or choose a different name."
+                    )
+
             habit = {
                 "name": name,
                 "goal": goal,
@@ -525,11 +560,26 @@ class VoiceAgent(Agent):
             HABIT_PLAN_FILE.write_text(json.dumps(habits, indent=2))
             self._stage = STAGE_SCHEDULING
             logger.info(f"Saved habit plan: {name} — [STAGE] → {self._stage}")
+            habit_count = len(habits)
+            if habit_count >= 2:
+                return (
+                    f"Habit '{name}' saved to plan ({cadence} at {preferred_time}, {duration_minutes} min). "
+                    f"That's {habit_count} habits now.\n\n"
+                    f"--- NEXT STEP ---\n"
+                    f"You have {habit_count} habits saved — that's a great starting point. "
+                    f"Recommend moving to scheduling now. Research shows starting with fewer habits "
+                    f"leads to better consistency. Say something like: 'That's a solid foundation — "
+                    f"let's get these on your calendar before adding more.' "
+                    f"Only add more if the user explicitly insists.\n"
+                    f"Call fetch_monthly_calendar followed by generate_draft_schedule.\n"
+                    f"{STAGE_INSTRUCTIONS[STAGE_SCHEDULING]}"
+                )
             return (
                 f"Habit '{name}' saved to plan ({cadence} at {preferred_time}, {duration_minutes} min).\n\n"
                 f"--- NEXT STEP ---\n"
-                f"Ask the user: would they like to add another habit, or are they ready "
-                f"to schedule? If they want to schedule (or have no more habits), call "
+                f"Ask the user if they'd like to add one more habit or go ahead and schedule. "
+                f"Gently suggest that starting with 1-2 habits is ideal — they can always add more "
+                f"once these are established. If they want to schedule, call "
                 f"fetch_monthly_calendar followed by generate_draft_schedule.\n"
                 f"{STAGE_INSTRUCTIONS[STAGE_SCHEDULING]}"
             )
@@ -590,6 +640,7 @@ class VoiceAgent(Agent):
                 description=description,
                 recurrence=rrule,
                 timezone=self.user_tz,
+                service=self._get_service(),
             )
             link = event.get("htmlLink", "")
             recurrence_text = f" ({recurrence})" if recurrence else ""
@@ -608,6 +659,7 @@ class VoiceAgent(Agent):
             cal_ids = [c["id"] for c in calendars]
             events = calendar_client.list_upcoming_events(
                 max_results=10, calendar_ids=cal_ids,
+                service=self._get_service(),
             )
             if not events:
                 return "No upcoming events found."
@@ -636,20 +688,43 @@ class VoiceAgent(Agent):
             events = calendar_client.list_month_events(
                 year=now.year, month=now.month, timezone=self.user_tz,
                 calendars=calendars,
+                service=self._get_service(),
             )
             cal_count = len(calendars)
             await _push_status(self, f"Found {len(events)} event(s) across {cal_count} calendar(s)")
             if not events:
                 return f"No events found for {now.strftime('%B %Y')}. The calendar is wide open!"
 
-            lines = [f"Busy times for {now.strftime('%B %Y')} (across {cal_count} calendar(s)):"]
+            # Build a concise summary instead of listing every event to avoid
+            # overflowing the OpenAI Realtime API token limit.
+            user_tz = ZoneInfo(self.user_tz)
+            busy_days: dict[str, int] = {}
             for ev in events:
-                start = ev["start"].get("dateTime", ev["start"].get("date", ""))
-                end = ev["end"].get("dateTime", ev["end"].get("date", ""))
-                summary = ev.get("summary", "(no title)")
-                cal_name = ev.get("_calendar_name", "")
-                cal_label = f" [{cal_name}]" if cal_name else ""
-                lines.append(f"- {summary}{cal_label}: {start} to {end}")
+                start_str = ev["start"].get("dateTime", ev["start"].get("date", ""))
+                try:
+                    if "T" in start_str:
+                        dt = datetime.fromisoformat(start_str).astimezone(user_tz)
+                    else:
+                        dt = datetime.fromisoformat(start_str)
+                    day_key = dt.strftime("%A %b %d")
+                except (ValueError, TypeError):
+                    continue
+                busy_days[day_key] = busy_days.get(day_key, 0) + 1
+
+            lines = [
+                f"Calendar overview for {now.strftime('%B %Y')} "
+                f"({len(events)} events across {cal_count} calendar(s)):",
+            ]
+            # Show up to 7 busiest days so the agent has context for conversation
+            sorted_days = sorted(busy_days.items(), key=lambda x: x[1], reverse=True)
+            for day, count in sorted_days[:7]:
+                lines.append(f"- {day}: {count} event(s)")
+            if len(sorted_days) > 7:
+                lines.append(f"- ...and {len(sorted_days) - 7} more day(s) with events")
+            lines.append(
+                "\nThe full calendar is used automatically for conflict detection "
+                "when generating the draft schedule."
+            )
             return "\n".join(lines)
         except Exception as e:
             logger.error(f"Failed to fetch monthly calendar: {e}")
@@ -681,6 +756,7 @@ class VoiceAgent(Agent):
             existing_events = calendar_client.list_month_events(
                 year=now.year, month=now.month, timezone=self.user_tz,
                 calendars=calendars,
+                service=self._get_service(),
             )
 
             # Build list of existing busy slots — normalize everything to user TZ
@@ -1097,6 +1173,7 @@ class VoiceAgent(Agent):
                         recurrence=rrule,
                         timezone=self.user_tz,
                         calendar_id=self._target_calendar,
+                        service=self._get_service(),
                     )
                     created_count += 1
                 except Exception as e:
@@ -1167,9 +1244,18 @@ async def entrypoint(ctx: JobContext):
     def on_error(ev):
         logger.error(f"[SESSION ERROR] {ev}")
 
+    # Parse Google tokens from participant metadata (set by frontend)
+    google_tokens = None
+    if participant.metadata:
+        try:
+            google_tokens = json.loads(participant.metadata)
+            logger.info("[STARTUP] Loaded Google tokens from participant metadata")
+        except (json.JSONDecodeError, TypeError):
+            logger.warning("[STARTUP] Could not parse participant metadata as Google tokens")
+
     # Load existing memories so the agent can reference them
     memory = load_memory()
-    agent = VoiceAgent()
+    agent = VoiceAgent(google_tokens=google_tokens)
     agent._room = ctx.room
     if memory:
         memory_summary = ", ".join(f"{k}: {v}" for k, v in memory.items())
