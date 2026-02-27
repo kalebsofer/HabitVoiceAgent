@@ -1,7 +1,7 @@
 {
   "timezone": "Europe/London",
   "month": "2026-02",
-  "generated_at": "2026-02-27T15:33:09.398349+00:00",
+  "generated_at": "2026-02-27T15:41:48.508063+00:00",
   "status": "confirmed",
   "items": [
     {
@@ -929,6 +929,18 @@
       "calendar_color": "#9fc6e7"
     },
     {
+      "id": "scm3u9uoi9ektrvri6fac92dpo_20260228T080000Z",
+      "type": "existing",
+      "summary": "morning run",
+      "start": "2026-02-28T08:00:00Z",
+      "end": "2026-02-28T08:20:00Z",
+      "all_day": false,
+      "recurrence": null,
+      "habit_name": null,
+      "calendar_name": "kaleb sofer ",
+      "calendar_color": "#9fc6e7"
+    },
+    {
       "id": "70qjeob66pi66b9h64om8b9kc4r3abb2c4o6ab9k64pm8dpickqjed1pck_20260201T120000Z",
       "type": "existing",
       "summary": "Brunch @ Plimsoll",
@@ -944,11 +956,21 @@
       "id": "draft_001",
       "type": "draft",
       "summary": "morning run",
-      "start": "2026-02-28T08:00:00+00:00",
-      "end": "2026-02-28T08:20:00+00:00",
+      "start": "2026-02-28T08:30:00+00:00",
+      "end": "2026-02-28T08:50:00+00:00",
       "recurrence": "daily",
       "habit_name": "morning run",
       "description": "Goal: improve fitness\nCue: getting changed into running clothes\n2-min version: putting on running shoes and stepping outside"
+    },
+    {
+      "id": "draft_002",
+      "type": "draft",
+      "summary": "jog",
+      "start": "2026-02-28T09:00:00+00:00",
+      "end": "2026-02-28T09:20:00+00:00",
+      "recurrence": "daily",
+      "habit_name": "jog",
+      "description": "Goal: get fitter\nCue: starting the day in the morning\n2-min version: put on running shoes and step outside"
     }
   ]
 }

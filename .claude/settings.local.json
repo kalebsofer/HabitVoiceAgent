@@ -11,7 +11,12 @@
       "Bash(python -c:*)",
       "Bash(npx:*)",
       "Bash(openssl rand:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(ssh:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

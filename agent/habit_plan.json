@@ -7,5 +7,14 @@
     "duration_minutes": 20,
     "cue": "getting changed into running clothes",
     "two_minute_version": "putting on running shoes and stepping outside"
+  },
+  {
+    "name": "jog",
+    "goal": "get fitter",
+    "cadence": "daily",
+    "preferred_time": "08:00",
+    "duration_minutes": 20,
+    "cue": "starting the day in the morning",
+    "two_minute_version": "put on running shoes and step outside"
   }
 ]
