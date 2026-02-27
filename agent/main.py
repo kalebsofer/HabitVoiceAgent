@@ -415,7 +415,8 @@ class VoiceAgent(Agent):
         existing_habits = []
         if HABIT_PLAN_FILE.exists():
             try:
-                existing_habits = json.loads(HABIT_PLAN_FILE.read_text())
+                data = json.loads(HABIT_PLAN_FILE.read_text())
+                existing_habits = data if isinstance(data, list) else []
             except Exception:
                 existing_habits = []
 
@@ -535,7 +536,8 @@ class VoiceAgent(Agent):
 
             habits = []
             if HABIT_PLAN_FILE.exists():
-                habits = json.loads(HABIT_PLAN_FILE.read_text())
+                data = json.loads(HABIT_PLAN_FILE.read_text())
+                habits = data if isinstance(data, list) else []
 
             # Check for duplicate or very similar habit names
             name_lower = name.strip().lower()
@@ -592,7 +594,8 @@ class VoiceAgent(Agent):
         try:
             if not HABIT_PLAN_FILE.exists():
                 return "No habits in the plan yet."
-            habits = json.loads(HABIT_PLAN_FILE.read_text())
+            data = json.loads(HABIT_PLAN_FILE.read_text())
+            habits = data if isinstance(data, list) else []
             if not habits:
                 return "No habits in the plan yet."
             lines = []
@@ -742,7 +745,8 @@ class VoiceAgent(Agent):
             # Load habit plan
             if not HABIT_PLAN_FILE.exists():
                 return "No habit plan found. Please create habits first."
-            habits = json.loads(HABIT_PLAN_FILE.read_text())
+            data = json.loads(HABIT_PLAN_FILE.read_text())
+            habits = data if isinstance(data, list) else []
             if not habits:
                 return "Habit plan is empty. Please add some habits first."
 
@@ -1003,7 +1007,8 @@ class VoiceAgent(Agent):
             # Load the habit from the plan to get metadata
             habits = []
             if HABIT_PLAN_FILE.exists():
-                habits = json.loads(HABIT_PLAN_FILE.read_text())
+                data = json.loads(HABIT_PLAN_FILE.read_text())
+                habits = data if isinstance(data, list) else []
             habit = next((h for h in habits if h["name"].lower() == habit_name.lower()), None)
 
             user_tz = ZoneInfo(self.user_tz)
